@@ -1,0 +1,28 @@
+---------------------------------------------
+-- SQL Server and Oracle/DB2 Syntax mixed up
+ 
+---------------------------------------------
+declare @MNCustomerCount int;
+declare ILCustomerCount int default 0;
+
+select @MNCustomerCount = count(*) from Customer where State = 'MN'; 
+set ILCustomerCount = (select count(*) from Customer where State = 'IL'); 
+
+print 'MN Count: ' || @MNCustomerCount || ' IL Count: ' || ILCustomerCount;
+
+/* ------------------------------------
+If statement - Oracle/DB2 Syntax *
+--------------------------------------- */
+IF (@MNCustomerCount > ILCustomerCount) THEN 
+  print 'MN has the most customers'; 
+END IF;
+
+-------------------------------------
+-- If Statement - SQL Server syntax 
+-------------------------------------
+IF ILCustomerCount > @MNCustomerCount 
+   BEGIN 
+     print 'IL has the most customers'; 
+   END
+ELSE 
+   print 'We checked twice. MN Still has the most customers. It''s time to give up...'; 

@@ -1,0 +1,53 @@
+create procedure spLoadSalesFact (LoadMonth char(10)) 
+BEGIN
+
+   SET plhql.onerror = seterror; 
+
+   print 'Beginning execution...'; 
+   print '*' || LoadMonth || '*'; 
+
+   /* Fail if invalid Input Parameter 
+   set LoadMonth = Upper(LoadMonth); 
+   if (LoadMonth not in ('LAST', 'CURRENT'))
+      BEGIN
+      print 'Bad Input Paramter'; 
+      RETURN -1;
+      END
+    */
+
+   /* Load Prior Month */
+   IF (LoadMonth = 'LAST') 
+      BEGIN
+      print 'Inserting Last Month''s Data...'; 
+      insert into table saleslineitem 
+      select * from saleslineitem 
+      where TransactionDate >= '2011-06-01' 
+        and transactionDate < '2011-07-01';
+
+      if SQLCODE <> 0 
+         RETURN -2;
+      END
+
+   /* Load Current Month */
+   ELSE IF (LoadMonth = 'CURRENT') 
+      BEGIN
+      print 'Inserting Current month''s data...'; 
+      insert into table saleslineitem 
+      select * from saleslineitem 
+      where TransactionDate >= '2011-07-01' 
+        and transactionDate < '2011-08-01';
+
+      if SQLCODE <> 0 
+         RETURN -3;
+      END
+
+   PRINT 'Execution Completed...'; 
+
+END
+
+/* Stored Proc invocation */
+
+-- CALL spLoadSalesFact ('GARBAGE'); 
+-- CALL spLoadSalesFact ('LAST');
+CALL spLoadSalesFact ('CURRENT');
+

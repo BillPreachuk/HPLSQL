@@ -1,0 +1,94 @@
+--------------------------------------------------------------------
+-- Setup & Cleanup 
+-- IP Address of HDP 2.3 Cluster: 192.168.232.128
+-- (your IP address may be different... 
+--             confirm the IP address on VM server splash page) 
+--
+-- IP Address of SQL Server: 192.168.108.1
+-- 
+-- Sqoop User Guide for 1.4.6 
+--       https://sqoop.apache.org/docs/1.4.6/SqoopUserGuide.html
+--
+-- remote login      ssh root@192.168.214.139    (root/hadoop)
+-- Ambari:           http://192.168.214.139:8080 (admin/admin)
+-- Resource Manager: http://192.168.214.139:8088/
+---------------------------------------------------------------------
+
+-----------------------------
+-- Cleanup - drop HDFS data 
+-----------------------------
+hadoop fs -rm -R /user/root/Customer
+hadoop fs -rm -R /user/root/Product
+hadoop fs -rm -R /user/root/SalesLineItem
+
+
+-------------------
+-- SQL Server 
+-------------------
+use SalesDataDW; 
+
+sp_help Customer; 
+sp_help Product; 
+sp_help SalesLineItem; 
+
+
+-------------------
+-- Hive
+------------------- 
+drop table if exists SalesDataDW.Customer;
+drop table if exists SalesDataDW.Product;
+drop table if exists SalesDataDW.SalesLineItem;
+
+drop database if exists SalesDataDW; 
+create database SalesDataDW; 
+
+
+--------------------------------------------------------
+-- Sqoop & HDFS COmmands both run on the command Line 
+--------------------------------------------------------
+
+sqoop import --connect "jdbc:sqlserver://192.168.108.1:1433;database=SalesDataDW" \
+--username root \
+--password hadoop \
+--table Customer \
+--hive-import --hive-overwrite \
+--hive-table SalesDataDW.Customer \
+-m 1
+
+sqoop import --connect "jdbc:sqlserver://192.168.108.1:1433;database=SalesDataDW" \
+--username root \
+--password hadoop \
+--table Product \
+--hive-import --hive-overwrite \
+--hive-table SalesDataDW.Product \
+-m 1
+
+sqoop import --connect "jdbc:sqlserver://192.168.108.1:1433;database=SalesDataDW" \
+--username root \
+--password hadoop \
+--table SalesLineItem \
+--hive-import --hive-overwrite \
+--hive-table SalesDataDW.SalesLineItem \
+--fields-terminated-by "|"
+-m 1
+
+
+-----------------------------------------
+-- Hive - Look for newly created tables
+-----------------------------------------
+Use SalesDataDW; 
+
+describe formatted Customer; 
+describe formatted Product; 
+describe formatted SalesLineItem; 
+
+select 'Customer', count(*) from Customer
+UNION 
+select 'Product', count(*) from Product 
+UNION 
+select 'SalesLineItem', count(*) from SalesLineItem; 
+
+
+create table SalesLineItem
+as select * from 
+
